@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: brawltracker
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pytest
+        env:
+          BRAWL_API_KEY: ${{ secrets.BRAWL_API_KEY }}
+          PLAYER_TAG: ${{ secrets.PLAYER_TAG }}
+          DB_URL: postgresql://postgres:postgres@localhost:5432/brawltracker
+        run: python -m pytest tests/ -v
+
+      - name: Set up dbt profile
+        run: |
+          mkdir -p ~/.dbt
+          cat <<EOF > ~/.dbt/profiles.yml
+          brawl_dbt:
+            target: dev
+            outputs:
+              dev:
+                type: postgres
+                host: localhost
+                port: 5432
+                user: postgres
+                password: postgres
+                dbname: brawltracker
+                schema: analytics
+                threads: 1
+          EOF
+
+      - name: Run dbt deps
+        working-directory: brawl_dbt
+        run: dbt deps
+
+      - name: Run dbt build
+        working-directory: brawl_dbt
+        run: dbt build
