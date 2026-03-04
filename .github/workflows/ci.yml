@@ -61,7 +61,12 @@ jobs:
                 schema: analytics
                 threads: 1
           EOF
-
+          
+      - name: Create database tables
+        env:
+          DB_URL: postgresql://postgres:postgres@localhost:5432/brawltracker
+        run: python db/models.py
+  
       - name: Run dbt deps
         working-directory: brawl_dbt
         run: dbt deps

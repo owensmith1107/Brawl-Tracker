@@ -14,7 +14,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['victory', 'defeat', 'draw']
+              arguments:
+                values: ['victory', 'defeat', 'draw']
       - name: game_type
         description: "Type of game: trophy_road, ranked_solo, ranked_team, friendly"
         tests:
