@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: brawltracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  init_db:
+    build: .
+    command: python db/models.py
+    env_file: .env
+    environment:
+      DB_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/brawltracker
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build: .
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+    env_file: .env
+    environment:
+      DB_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/brawltracker
+    ports:
+      - "8000:8000"
+    depends_on:
+      init_db:
+        condition: service_completed_successfully
+    restart: always
+
+  dashboard:
+    build: .
+    command: streamlit run dashboard.py --server.port 8501 --server.address 0.0.0.0
+    env_file: .env
+    environment:
+      DB_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/brawltracker
+    ports:
+      - "8501:8501"
+    depends_on:
+      init_db:
+        condition: service_completed_successfully
+    restart: always
+
+  dagster:
+    build: .
+    command: dagster dev -f orchestration/definitions.py -h 0.0.0.0 -p 3000
+    env_file: .env
+    environment:
+      DB_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/brawltracker
+    ports:
+      - "3000:3000"
+    depends_on:
+      init_db:
+        condition: service_completed_successfully
+    restart: always
+
+volumes:
+  postgres_data:
