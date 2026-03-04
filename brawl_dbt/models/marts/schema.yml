@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: mart_brawler_stats
+    description: "Win rates and performance stats grouped by brawler and game type"
+    columns:
+      - name: brawler_name
+        tests:
+          - not_null
+      - name: win_rate_pct
+        description: "Win rate as a percentage 0-100"
+        tests:
+          - not_null
+
+  - name: mart_map_stats
+    description: "Win rates grouped by map, mode, and game type"
+    columns:
+      - name: map_name
+        tests:
+          - not_null
+
+  - name: mart_teammate_stats
+    description: "Win rates when playing with specific teammates"
+    columns:
+      - name: teammate_tag
+        tests:
+          - not_null
+      - name: games_together
+        tests:
+          - not_null

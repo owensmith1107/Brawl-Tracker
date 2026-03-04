@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+.env
+brawl_dbt/target/
+brawl_dbt/dbt_packages/
+.pytest_cache/

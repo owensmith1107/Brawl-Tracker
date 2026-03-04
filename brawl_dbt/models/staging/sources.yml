@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: public
+    database: brawltracker
+    schema: public
+    tables:
+      - name: battles
+        description: "Raw battle records from the Brawl Stars API"
+      - name: battle_players
+        description: "Raw player records for each battle"

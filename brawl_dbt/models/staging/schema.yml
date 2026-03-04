@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: stg_battles
+    description: "Cleaned and renamed battles from the Brawl Stars API"
+    columns:
+      - name: battle_id
+        description: "Unique identifier for each battle"
+        tests:
+          - unique
+          - not_null
+      - name: result
+        description: "Outcome of the battle"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['victory', 'defeat', 'draw']
+      - name: game_type
+        description: "Type of game: trophy_road, ranked_solo, ranked_team, friendly"
+        tests:
+          - not_null
+
+  - name: stg_battle_players
+    description: "Cleaned and renamed player records for each battle"
+    columns:
+      - name: battle_player_id
+        tests:
+          - unique
+          - not_null
+      - name: battle_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_battles')
+              field: battle_id
+      - name: player_tag
+        tests:
+          - not_null
